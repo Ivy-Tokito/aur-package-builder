@@ -2,7 +2,7 @@
 set -e 
 
 # commit your package name Here
-PACKAGE="bleachbit-git"
+PACKAGE="waterfox-g-kpe"
 
 if [ "$1" = "setupenv" ]; then
 
