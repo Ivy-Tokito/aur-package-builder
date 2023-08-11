@@ -1,0 +1,62 @@
+name: Build Packages
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions: write-all  
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux
+      options: --privileged
+      
+    steps:    
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Build Environment
+        run: bash build.sh setupenv
+
+      - name: Build Package
+        run: bash build.sh build
+
+      - name: Get Release Name
+        id: release_name
+        run: |
+          RELEASE="$(grep "Package :" /build/build.md | awk -F' : ' '{print $2}')"
+          echo "RELEASE_NAME=$RELEASE" >> "$GITHUB_OUTPUT"
+
+      - name: Get Release Description
+        id: description
+        run: |
+          DELIM="$(openssl rand -hex 8)"
+          echo "BUILD_LOG<<${DELIM}" >> "$GITHUB_OUTPUT"
+          cat /build/build.md >> "$GITHUB_OUTPUT"
+          echo "${DELIM}" >> "$GITHUB_OUTPUT"
+          
+      - name: Get Tag
+        id: build_tag
+        run: |
+          TAG="v$(grep "Version :" /build/build.md | awk -F' : ' '{print $2}')"
+          echo "BUILD_TAG=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Upload To Release
+        uses: svenstaro/upload-release-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: /build/packages/*.pkg*
+          release_name: ${{ steps.release_name.outputs.RELEASE_NAME }}
+          body: ${{ steps.description.outputs.BUILD_LOG }}
+          tag: ${{ steps.build_tag.outputs.BUILD_TAG }}
+          file_glob: true
+          overwrite: true
+
+      - name: Upload Build Logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: /build/logs
+          if-no-files-found: ignore
