@@ -2,7 +2,7 @@
 set -e 
 
 # commit your package name Here
-PACKAGE="protonvpn"
+PACKAGE="bleachbit-git"
 
 if [ "$1" = "setupenv" ]; then
 
