@@ -2,7 +2,7 @@
 set -e 
 
 # commit your package name Here
-PACKAGE="waterfox-g-kpe"
+PACKAGE="protonvpn-gui"
 
 if [ "$1" = "setupenv" ]; then
 
