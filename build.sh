@@ -2,7 +2,7 @@
 set -e 
 
 # commit your package name Here
-PACKAGE=""
+PACKAGE="protonvpn"
 
 if [ "$1" = "setupenv" ]; then
 
