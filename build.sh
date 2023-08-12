@@ -4,6 +4,11 @@ set -e
 # commit your package name Here
 PACKAGE="atom"
 
+declare -A broken=(
+  ["python-dbus"]="dbus-python"
+  ["electron11"]="electron11-bin"
+)
+
 if [ "$1" = "setupenv" ]; then
 
 # Env Config
@@ -12,7 +17,7 @@ sed -i "s/#ParallelDownloads = 5/ParallelDownloads = 4/" "/etc/pacman.conf"
 sed -i "s/#Color/Color/" "/etc/pacman.conf"
 
 # Install package
-pacman -Syuu --noconfirm --needed base-devel mold ccache git sudo
+pacman -Syuu --noconfirm --needed base-devel mold ccache jq git sudo
 
 # Build Configs
 sed -i "s|#MAKEFLAGS=.*|MAKEFLAGS=-j$(nproc)|" /etc/makepkg.conf
@@ -39,35 +44,31 @@ chown -R user:user "$PACKAGE"
 cd "$PACKAGE"
 
 # Check Depends
-PACKDEPNS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
+PACKDEPS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
 
-for PACKDEPNS in $PACKDEPNS; do
-    if ! pacman -Si "$PACKDEPNS" &> /dev/null; then
-        echo "warning: pacman: target not found: $PACKDEPNS"
-        echo "building and installing package $PACKDEPNS via AUR Repo"
-
-        CHECK_REPO=$(curl -s "https://aur.archlinux.org/$PACKDEPNS.git" | grep -o "Page Not Found")
-        if [ "$CHECK_REPO" = "Page Not Found" ];then echo "$PACKDEPNS Package not found in AUR Repo" && exit 1;fi
-        git clone "https://aur.archlinux.org/$PACKDEPNS.git"
-
-        cd "$PACKDEPNS" || exit
-
-        SUB_PACKDEPNS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
-
-        for SUB_PACKDEPNS in $SUB_PACKDEPNS; do
-            if ! pacman -Si "$SUB_PACKDEPNS" &> /dev/null; then
-                echo "warning: pacman: target not found: $SUB_PACKDEPNS"
-                echo "building and installing package $SUB_PACKDEPNS via AUR Repo"
-
-                CHECK_SUB_REPO=$(curl -s "https://aur.archlinux.org/$SUB_PACKDEPNS.git" | grep -o "Page Not Found")
-                if [ "$CHECK_SUB_REPO" = "Page Not Found" ];then echo "$SUB_PACKDEPNS Package not found in AUR Repo" && exit 1;fi
-                git clone "https://aur.archlinux.org/$SUB_PACKDEPNS.git"
-
-                cd "$SUB_PACKDEPNS" || exit
+for _package in $PACKDEPS; do
+if [[ -n ${broken[$PACKDEPS]} ]]; then PACKDEPNDS="${broken[$PACKDEPS]}"; else PACKDEPNDS="$PACKDEPS"; fi
+echo "$PACKDEPNDS"
+    if ! pacman -Si "$PACKDEPNDS" &> /dev/null; then
+        echo "Warning: pacman: target not found: $PACKDEPNDS" && echo "Building and installing package $PACKDEPNDS via AUR Repo"
+        CHECK_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKDEPNDS" | jq -r ".resultcount")
+        if [ "$CHECK_REPO" -eq 0 ];then echo "$PACKDEPNDS Package not found in AUR Repo" && exit 1;fi
+        git clone "https://aur.archlinux.org/$PACKDEPNDS.git"
+        cd "$PACKDEPNDS" || exit
+    
+    SUB_PACKDEPS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
+    if [[ -n ${broken[$SUB_PACKDEPS]} ]]; then SUB_PACKDEPNDS="${broken[$SUB_PACKDEPS]}"; else SUB_PACKDEPNDS="$SUB_PACKDEPS"; fi
+        for _sub_package in $SUB_PACKDEPNDS; do
+        echo "$SUB_PACKDEPNDS"
+            if ! pacman -Si "$SUB_PACKDEPNDS" &> /dev/null; then
+                echo "Warning: pacman: target not found: $SUB_PACKDEPNDS" && echo "Building and installing package $SUB_PACKDEPNDS via AUR Repo"
+                CHECK_SUB_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$SUB_PACKDEPNDS" | jq -r ".resultcount")
+                if [ "$CHECK_SUB_REPO" -eq 0 ];then echo "$SUB_PACKDEPNDS Package not found in AUR Repo" && exit 1;fi
+                git clone "https://aur.archlinux.org/$SUB_PACKDEPNDS.git"
+                cd "$SUB_PACKDEPNDS" || exit
                 makepkg -Csi --noconfirm --needed
             fi
         done
-
         makepkg -Csi --noconfirm --needed
     fi
 done
