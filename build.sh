@@ -2,7 +2,7 @@
 set -e 
 
 # commit your package name Here
-PACKAGE=""
+PACKAGE="atom"
 
 if [ "$1" = "setupenv" ]; then
 
@@ -49,6 +49,41 @@ cd /home/user
 git clone "https://aur.archlinux.org/$PACKAGE.git"
 chown -R user:user "$PACKAGE"
 cd "$PACKAGE"
+
+# Check Depends
+PACKDEPNS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
+
+for packdepns in $PACKDEPNS; do
+    if ! pacman -Si "$PACKDEPNS" &> /dev/null; then
+        echo "warning: pacman: target not found: $PACKDEPNS"
+        echo "building and installing package $PACKDEPNS via AUR Repo"
+
+        CHECK_REPO=$(curl -s "https://aur.archlinux.org/$PACKDEPNS.git" | grep -o "Page Not Found")
+        if [ "$CHECK_REPO" = "Page Not Found" ];then echo "$PACKDEPNS Package not found in AUR Repo" && exit 1;fi
+        git clone "https://aur.archlinux.org/$PACKDEPNS.git"
+
+        cd "$PACKDEPNS" || exit
+
+        SUB_PACKDEPNS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
+
+        for sub_package in $SUB_PACKDEPNS; do
+            if ! pacman -Si "$SUB_PACKDEPNS" &> /dev/null; then
+                echo "warning: pacman: target not found: $SUB_PACKDEPNS"
+                echo "building and installing package $SUB_PACKDEPNS via AUR Repo"
+
+                CHECK_SUB_REPO=$(curl -s "https://aur.archlinux.org/$SUB_PACKDEPNS.git" | grep -o "Page Not Found")
+                if [ "$CHECK_SUB_REPO" = "Page Not Found" ];then echo "$SUB_PACKDEPNS Package not found in AUR Repo" && exit 1;fi
+                git clone "https://aur.archlinux.org/$SUB_PACKDEPNS.git"
+
+                cd "$SUB_PACKDEPNS" || exit
+                makepkg -Csi --noconfirm --needed
+            fi
+        done
+
+        makepkg -Csi --noconfirm --needed
+    fi
+done
+
 get_env-var
 sudo -u user bash <<EXC
 makepkg -Cs --verifysource --noconfirm --needed
@@ -68,9 +103,9 @@ EXC
 
 # Copy compiled package
 mkdir -p /build/packages
-cp -v *.pkg*  "/build/packages"
+find "/home/user/$PACKAGE" -type f -name "*.pkg*" -exec cp -v {} "/build/packages"
 # Copy logs
 mkdir -p /build/logs
-cp -v *.log /build/logs 2>/dev/null
+find "/home/user/$PACKAGE" -type f -name "*.log" -exec cp -v {} "/build/logs" 2>/dev/null
 echo "done"
 fi
