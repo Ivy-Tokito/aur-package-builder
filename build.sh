@@ -25,18 +25,6 @@ sed -i 's/\(RUSTFLAGS=".*\)"$/\1 -C link-arg=-fuse-ld=mold"/' /etc/makepkg.conf
 sed -i 's/\(COMPRESSZST=(.*\))$/\1-threads=0 -)/' /etc/makepkg.conf
 sed -i 's/\(COMPRESSXZ=(.*\))$/\1-threads=0 -)/' /etc/makepkg.conf
 
-get_env-var () {
-mkdir -p /build/
-echo "Package : $(cat PKGBUILD | grep -oP '^pkgname=\K[^ _]+')" >> /build/build.md
-echo "Description : $(cat PKGBUILD | grep 'pkgdesc' | cut -d "=" -f 2)" >> /build/build.md
-echo "Version : $(cat PKGBUILD | grep -oP '^pkgver=\K[^ _]+')" >> /build/build.md
-echo "Arch : $(cat PKGBUILD | grep -oP '^arch=\K[^ _]+')" >> /build/build.md
-echo "Source URL : $(cat PKGBUILD | grep -oP '^url=\K[^ _]+')" >> /build/build.md
-echo "Dependency : $(awk -v RS=")" '/depends=\(/ && !/optdepends/ && !/makedepends/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)" >> /build/build.md
-echo "Optional Dependency : $(awk -v RS=")" '/optdepends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)" >> /build/build.md
-echo "Make Dependency Used : $(awk -v RS=")" '/makedepends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)" >> /build/build.md
-}
-
 # Adduser
 groupadd sudo
 useradd -m user || true
@@ -53,7 +41,7 @@ cd "$PACKAGE"
 # Check Depends
 PACKDEPNS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
 
-for packdepns in $PACKDEPNS; do
+for PACKDEPNS in $PACKDEPNS; do
     if ! pacman -Si "$PACKDEPNS" &> /dev/null; then
         echo "warning: pacman: target not found: $PACKDEPNS"
         echo "building and installing package $PACKDEPNS via AUR Repo"
@@ -66,7 +54,7 @@ for packdepns in $PACKDEPNS; do
 
         SUB_PACKDEPNS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
 
-        for sub_package in $SUB_PACKDEPNS; do
+        for SUB_PACKDEPNS in $SUB_PACKDEPNS; do
             if ! pacman -Si "$SUB_PACKDEPNS" &> /dev/null; then
                 echo "warning: pacman: target not found: $SUB_PACKDEPNS"
                 echo "building and installing package $SUB_PACKDEPNS via AUR Repo"
@@ -84,7 +72,19 @@ for packdepns in $PACKDEPNS; do
     fi
 done
 
-get_env-var
+# Get Env Vars
+mkdir -p /build/
+{ 
+echo "Package : $(PKGBUILD | grep -oP '^pkgname=\K[^ _]+')"
+echo "Description : $(PKGBUILD | grep 'pkgdesc' | cut -d "=" -f 2)"
+echo "Version : $(PKGBUILD | grep -oP '^pkgver=\K[^ _]+')"
+echo "Arch : $(PKGBUILD | grep -oP '^arch=\K[^ _]+')"
+echo "Source URL : $(PKGBUILD | grep -oP '^url=\K[^ _]+')"
+echo "Dependency : $(awk -v RS=")" '/depends=\(/ && !/optdepends/ && !/makedepends/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)"
+echo "Optional Dependency : $(awk -v RS=")" '/optdepends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)"
+echo "Make Dependency Used : $(awk -v RS=")" '/makedepends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)"
+} >>/build/build.md
+
 sudo -u user bash <<EXC
 makepkg -Cs --verifysource --noconfirm --needed
 EXC
@@ -103,9 +103,9 @@ EXC
 
 # Copy compiled package
 mkdir -p /build/packages
-find "/home/user/$PACKAGE" -type f -name "*.pkg*" -exec cp -v {} "/build/packages"
+find "/home/user/$PACKAGE" -type f -name "*.pkg*" -exec cp -v {} "/build/packages" \;
 # Copy logs
 mkdir -p /build/logs
-find "/home/user/$PACKAGE" -type f -name "*.log" -exec cp -v {} "/build/logs" 2>/dev/null
+find "/home/user/$PACKAGE" -type f -name "*.log" -exec cp -v {} "/build/logs" \; 2>/dev/null
 echo "done"
 fi
