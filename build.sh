@@ -45,7 +45,7 @@ cd "$PACKAGE"
 
 # Check Depends
 PACKDEPS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
-
+echo "begin for loop for $PACKDEPS"
 for _package in $PACKDEPS; do
 if [[ -n ${broken[$PACKDEPS]} ]]; then PACKDEPNDS="${broken[$PACKDEPS]}"; else PACKDEPNDS="$PACKDEPS"; fi
 echo "$PACKDEPNDS"
