@@ -1,5 +1,5 @@
 #!/usr/bin/bash
-set -e 
+set -ex 
 
 # commit your package name Here
 PACKAGE="atom"
@@ -42,6 +42,7 @@ cd /home/user
 git clone "https://aur.archlinux.org/$PACKAGE.git"
 chown -R user:user "$PACKAGE"
 cd "$PACKAGE"
+pwd
 
 # Check Depends
 PACKDEPS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
