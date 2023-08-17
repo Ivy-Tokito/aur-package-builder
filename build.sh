@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-set -euo pipefail
+set -e pipefail
 
 source utils.sh
 source config.conf
