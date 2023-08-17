@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-set -e pipefail
-
 source utils.sh
 source config.conf
 
