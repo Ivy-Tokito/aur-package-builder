@@ -79,7 +79,7 @@ EXC
 }
 
 get-depends() {
-  local PACKAGE=$1 "$2"
+  local PACKAGE=$1
   # Get Depends
   DEPS=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].Depends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
   MDEPS=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].MakeDepends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
@@ -92,7 +92,7 @@ get-depends() {
 }
 
 check-broken-packages() {
-  local DEPENDS=$1 "$2"
+  local DEPENDS=$1
   if [ "$2" = "SUB" ];then
     if [[ -n ${broken[$SUBDEPENDS]} ]]; then SUB_PACKDEPNDS="${broken[$SUBDEPENDS]}"; else SUB_PACKDEPNDS="$SUBDEPENDS"; fi
   else

@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -x
+
 source utils.sh
 source config.conf
 

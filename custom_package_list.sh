@@ -6,4 +6,5 @@
 declare -A broken=(
   ["python-dbus"]="dbus-python"
   ["electron11"]="electron11-bin"
+  ["python3"]="python"
 )
