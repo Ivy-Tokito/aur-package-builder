@@ -24,7 +24,7 @@ elif [ "$1" = "setupenv" ]; then
 	exit 0
 elif [ "$1" = "buildeps" ]; then
 	cd "/home/$NR_USER" || exit 1
-	get-aur-pkg $PACKAGE
+	get-base-pkg $PACKAGE
 	clone-repo "$AUR_PKG" && cd "$AUR_PKG"
 	ci-depends
 	exit 0
