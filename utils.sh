@@ -37,6 +37,11 @@ add-nroot-user() {
   %user ALL=(ALL) NOPASSWD: /usr/bin/pacman" >> "/etc/sudoers"
 }
 
+get-base-pkg() {
+  local PACKAGE=$1
+  AUR_PKG=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$1" | jq -r '.results[0].PackageBase')
+}
+
 check-pkg() {
   CHECK_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r ".resultcount")
   if [ "$CHECK_REPO" -eq 0 ];then
@@ -49,9 +54,10 @@ check-pkg() {
 clone-repo() {
   local PACKAGE=$1
   # Clone repo
-  git clone "https://aur.archlinux.org/$PACKAGE.git"
-  chown -R user:user "$PACKAGE"
-  cd "$PACKAGE" || exit
+  get-base-pkg "$PACKAGE"
+  git clone "https://aur.archlinux.org/$AUR_PKG.git"
+  chown -R user:user "$AUR_PKG"
+  cd "$AUR_PKG" || exit 1
 }
 
 build-depends() {
@@ -93,6 +99,7 @@ check-broken-packages() {
     if [[ -n ${broken[$DEPENDS]} ]]; then PACKDEPNDS="${broken[$DEPENDS]}"; else PACKDEPNDS="$DEPENDS"; fi
   fi
 }
+
 check-package-availability() {
   local PACKDEPNDS=$1
   if ! pacman -Si "$PACKDEPNDS" &> /dev/null; then
@@ -112,7 +119,7 @@ ci-depends() {
 
     get-depends "$PACKDEPNDS" "SUB"
     for SUBDEPENDS in $SUB_PACKDEPS; do
-      check-broken-packages "$DEPENDS" "SUB"
+      check-broken-packages "$SUBDEPENDS" "SUB"
       pr "$SUB_PACKDEPNDS"
       check-package-availability "$SUB_PACKDEPNDS"
       clone-repo "$SUB_PACKDEPNDS"
@@ -146,13 +153,15 @@ build (){
 }
 
 get-packages() {
+  get-base-pkg "$PACKAGE"
   # Copy compiled package
   mkdir -p /build/packages
-  find "/home/user/$PACKAGE" -type f -name "*.pkg*" -exec cp -v {} "/build/packages" \;
+  find "/home/user/$AUR_PKG" -type f -name "*.pkg*" -exec cp -v {} "/build/packages" \;
 }
 get-logs() {
   # Copy logs
+  get-base-pkg "$PACKAGE"
   mkdir -p /build/logs
-  find "/home/user/$PACKAGE" -type f -name "*.log" -exec cp -v {} "/build/logs" \; 2>/dev/null
+  find "/home/user/$AUR_PKG" -type f -name "*.log" -exec cp -v {} "/build/logs" \; 2>/dev/null
   pr "check /build/logs for build logs"
 }

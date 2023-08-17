@@ -60,12 +60,14 @@ jobs:
           file_glob: true
           overwrite: true
 
-      finally:
-        steps:
-          - name: Upload Build Logs
-            run: bash build.sh logs
-            uses: actions/upload-artifact@v3
-            with:
-              name: logs
-              path: /build/logs
-              if-no-files-found: ignore
+      - name: Get logs
+        if: success() || failure()
+        run: bash build.sh logs
+
+      - name: Upload Build Logs
+        if: success() || failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: /build/logs
+          if-no-files-found: ignore
