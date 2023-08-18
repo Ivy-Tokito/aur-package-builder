@@ -60,23 +60,11 @@ clone-repo() {
   cd "$AUR_PKG" || exit 1
 }
 
-build-depends() {
-  sudo -u user bash <<DEP
-  makepkg -Csi --noconfirm --needed
-DEP
-}
+build-depends() { sudo -u user makepkg -Csi --noconfirm --needed }
 
-verify-source() {
-  sudo -u user bash <<EXC
-  makepkg -Cs --verifysource --noconfirm --needed
-EXC
-}
+verify-source() { sudo -u user makepkg -Cs --verifysource --noconfirm --needed }
 
-build-package() {
-  sudo -u user bash <<EXC
-  makepkg -CLs --noconfirm --needed
-EXC
-}
+build-package() { sudo -u user makepkg -CLs --noconfirm --needed }
 
 get-depends() {
   local PACKAGE=$1
@@ -117,13 +105,11 @@ ci-depends() {
   get-depends "$PACKAGE"
   for DEPENDS in $PACKDEPS; do
     check-broken-packages "$DEPENDS"
-    pr "$PACKDEPNDS"
     check-package-availability "$PACKDEPNDS"
 
     get-depends "$PACKDEPNDS" "SUB"
     for SUBDEPENDS in $SUB_PACKDEPS; do
       check-broken-packages "$SUBDEPENDS" "SUB"
-      pr "$SUB_PACKDEPNDS"
       check-package-availability "$SUB_PACKDEPNDS"
       build-depends
     done
