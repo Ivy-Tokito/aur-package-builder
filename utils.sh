@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -ex
 source custom_package_list.sh
 
 pr() { echo -e "\033[0;32m[+] ${1}\033[0m"; }
@@ -56,15 +57,15 @@ clone-repo() {
   # Clone repo
   get-base-pkg "$PACKAGE"
   git clone "https://aur.archlinux.org/$AUR_PKG.git"
-  chown -R user:user "$AUR_PKG"
+  chown -R $NR_USER:$NR_USER "$AUR_PKG"
   cd "$AUR_PKG" || exit 1
 }
 
-build-depends() { sudo -u user makepkg -Csi --noconfirm --needed; }
+build-depends() { sudo -u "$NR_USER" makepkg -Csi --noconfirm --needed; }
 
-verify-source() { sudo -u user makepkg -Cs --verifysource --noconfirm --needed; }
+verify-source() { sudo -u "$NR_USER" makepkg -Cs --verifysource --noconfirm --needed; }
 
-build-package() { sudo -u user makepkg -CLs --noconfirm --needed; }
+build-package() { sudo -u "$NR_USER" makepkg -CLs --noconfirm --needed; }
 
 get-depends() {
   local PACKAGE=$1
@@ -96,6 +97,7 @@ check-package-availability() {
     CHECK_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKDEPNDS" | jq -r ".resultcount")
     if [ "$CHECK_REPO" -eq 0 ];then pr "$PACKDEPNDS Package not found in AUR Repo Too" && exit 1
       else
+      pr "$PACKDEPNDS Package found in AUR Repo | build it!"
       clone-repo "$PACKDEPNDS"
     fi
   fi
