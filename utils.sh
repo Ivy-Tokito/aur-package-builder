@@ -60,11 +60,11 @@ clone-repo() {
   cd "$AUR_PKG" || exit 1
 }
 
-build-depends() { sudo -u user makepkg -Csi --noconfirm --needed }
+build-depends() { sudo -u user makepkg -Csi --noconfirm --needed; }
 
-verify-source() { sudo -u user makepkg -Cs --verifysource --noconfirm --needed }
+verify-source() { sudo -u user makepkg -Cs --verifysource --noconfirm --needed; }
 
-build-package() { sudo -u user makepkg -CLs --noconfirm --needed }
+build-package() { sudo -u user makepkg -CLs --noconfirm --needed; }
 
 get-depends() {
   local PACKAGE=$1
