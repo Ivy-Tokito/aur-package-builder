@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -x
 source custom_package_list.sh
 
 pr() { echo -e "\033[0;32m[+] ${1}\033[0m"; }
