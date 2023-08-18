@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-set -x
-
 source utils.sh
 source config.conf
 
@@ -13,7 +11,7 @@ if [ -z ${1+x} ]; then
 	print_usage
 	exit 0
 elif [ "$1" = "clean" ]; then
-	rm -rf "$PACKAGE"
+	rm -rf "/home/$NR_USER/$PACKAGE"
 	exit 0
 elif [ "$1" = "checkpkg" ]; then
 	check-pkg

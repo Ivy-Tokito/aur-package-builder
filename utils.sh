@@ -24,7 +24,7 @@ setupenv() {
   sed -i 's/\(COMPRESSXZ=(.*\))$/\1-threads=0 -)/' /etc/makepkg.conf
 
   # Install & Upgrade Packages
-  pacman -Syuu --noconfirm --needed base-devel mold ccache jq git sudo
+  pacman -Syuu --noconfirm --needed base-devel psmisc mold ccache jq git sudo
 }
 
 add-nroot-user() {
@@ -39,7 +39,7 @@ add-nroot-user() {
 
 get-base-pkg() {
   local PACKAGE=$1
-  AUR_PKG=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$1" | jq -r '.results[0].PackageBase')
+  AUR_PKG=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].PackageBase')
 }
 
 check-pkg() {
@@ -103,9 +103,13 @@ check-broken-packages() {
 check-package-availability() {
   local PACKDEPNDS=$1
   if ! pacman -Si "$PACKDEPNDS" &> /dev/null; then
+    killall pacman
     pr "Warning: pacman: target not found: $PACKDEPNDS" && pr "Checking For $PACKDEPNDS In AUR Repo"
     CHECK_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKDEPNDS" | jq -r ".resultcount")
-    if [ "$CHECK_REPO" -eq 0 ];then pr "$PACKDEPNDS Package not found in AUR Repo Too" && exit 1; fi
+    if [ "$CHECK_REPO" -eq 0 ];then pr "$PACKDEPNDS Package not found in AUR Repo Too" && exit 1
+      else
+      clone-repo "$PACKDEPNDS"
+    fi
   fi
 }
 
@@ -115,14 +119,12 @@ ci-depends() {
     check-broken-packages "$DEPENDS"
     pr "$PACKDEPNDS"
     check-package-availability "$PACKDEPNDS"
-    clone-repo "$PACKDEPNDS"
 
     get-depends "$PACKDEPNDS" "SUB"
     for SUBDEPENDS in $SUB_PACKDEPS; do
       check-broken-packages "$SUBDEPENDS" "SUB"
       pr "$SUB_PACKDEPNDS"
       check-package-availability "$SUB_PACKDEPNDS"
-      clone-repo "$SUB_PACKDEPNDS"
       build-depends
     done
     build-depends
