@@ -57,7 +57,7 @@ clone-repo() {
   # Clone repo
   get-base-pkg "$PACKAGE"
   git clone "https://aur.archlinux.org/$AUR_PKG.git"
-  chown -R $NR_USER:$NR_USER "$AUR_PKG"
+  chown -R "$NR_USER":"$NR_USER" "$AUR_PKG"
   cd "$AUR_PKG" || exit 1
 }
 
@@ -92,7 +92,7 @@ check-broken-packages() {
 check-package-availability() {
   local PACKDEPNDS=$1
   if ! pacman -Si "$PACKDEPNDS" &> /dev/null; then
-    killall pacman
+    killall pacman 2>/dev/null
     pr "Warning: pacman: target not found: $PACKDEPNDS" && pr "Checking For $PACKDEPNDS In AUR Repo"
     CHECK_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKDEPNDS" | jq -r ".resultcount")
     if [ "$CHECK_REPO" -eq 0 ];then pr "$PACKDEPNDS Package not found in AUR Repo Too" && exit 1
