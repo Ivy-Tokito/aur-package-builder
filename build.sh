@@ -1,12 +1,12 @@
-#!/usr/bin/bash
-set -ex 
+#!/usr/bin/bash 
 
 # commit your package name Here
-PACKAGE="atom"
+PACKAGE="protonvpn"
 
 declare -A broken=(
   ["python-dbus"]="dbus-python"
   ["electron11"]="electron11-bin"
+  ["python3"]="python"
 )
 
 if [ "$1" = "setupenv" ]; then
@@ -42,7 +42,6 @@ cd /home/user
 git clone "https://aur.archlinux.org/$PACKAGE.git"
 chown -R user:user "$PACKAGE"
 cd "$PACKAGE"
-pwd
 
 # Check Depends
 PACKDEPS=$(awk -v RS=")" '/depends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD | grep -o '"[^"]\+"' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
