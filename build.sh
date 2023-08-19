@@ -23,16 +23,18 @@ elif [ "$1" = "setupenv" ]; then
 elif [ "$1" = "buildeps" ]; then
 	cd "/home/$NR_USER" || exit 1
 	clone-repo "$PACKAGE"
+  get-env-vars
 	ci-depends
 	exit 0
 elif [ "$1" = "build" ]; then
-	#verify-source
+	verify-source
 	build
-	get-builds
+	get-packages
 	pr "Package : $PACKAGE Built Successfuly"
 	exit 0
 elif [ "$1" = "logs" ]; then
 	get-logs
+  exit 0
 else
 	print_usage
 	exit 1

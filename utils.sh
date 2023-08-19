@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-set -x
 source custom_package_list.sh
 
 pr() { echo -e "\033[0;32m[+] ${1}\033[0m"; }
+
+log() { echo -e "$1  " >>"$2"; }
 
 setupenv() {
   # Pacman Config
@@ -56,9 +57,14 @@ clone-repo() {
   local PACKAGE=$1
   # Clone repo
   get-base-pkg "$PACKAGE"
-  git clone "https://aur.archlinux.org/$AUR_PKG.git"
-  chown -R "$NR_USER":"$NR_USER" "$AUR_PKG"
-  cd "$AUR_PKG" || exit 1
+  check-queue && PKGQ="$PKGQ $AUR_PKG"
+  if [ "$SCLONE" = false ];then
+    pr "Package $AUR_PKG Already in Queue"
+  else
+    git clone "https://aur.archlinux.org/$AUR_PKG.git"
+    chown -R "$NR_USER":"$NR_USER" "$AUR_PKG"
+    cd "$AUR_PKG" || exit 1
+  fi
 }
 
 build-depends() { sudo -u "$NR_USER" makepkg -Csi --noconfirm --needed; }
@@ -70,8 +76,8 @@ build-package() { sudo -u "$NR_USER" makepkg -CLs --noconfirm --needed; }
 get-depends() {
   local PACKAGE=$1
   # Get Depends
-  DEPS=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].Depends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
   MDEPS=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].MakeDepends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
+  DEPS=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].Depends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
   ODEPS=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].OptDepends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')
   if [ "$2" = "SUB" ];then
     SUB_PACKDEPS="${MDEPS} ${DEPS} ${ODEPS}"
@@ -93,7 +99,7 @@ check-package-availability() {
   local PACKDEPNDS=$1
   if ! pacman -Si "$PACKDEPNDS" &> /dev/null; then
     killall pacman 2>/dev/null
-    pr "Warning: pacman: target not found: $PACKDEPNDS" && pr "Checking For $PACKDEPNDS In AUR Repo"
+    pr "pacman: target not found: $PACKDEPNDS" && pr "Checking For $PACKDEPNDS In AUR Repo"
     CHECK_REPO=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKDEPNDS" | jq -r ".resultcount")
     if [ "$CHECK_REPO" -eq 0 ];then pr "$PACKDEPNDS Package not found in AUR Repo Too" && exit 1
       else
@@ -101,6 +107,12 @@ check-package-availability() {
       clone-repo "$PACKDEPNDS"
     fi
   fi
+}
+
+check-queue(){
+  for package in $PKGQ; do
+    if [ "$package" = "$AUR_PKG" ];then SCLONE=false; fi
+  done
 }
 
 ci-depends() {
@@ -120,16 +132,17 @@ ci-depends() {
 }
 
 get-env-vars() {
+  local PACKAGE
   # Get Env Vars
   mkdir -p /build/; {
-  echo "Package : $(grep -E '^pkgname=' PKGBUILD | cut -d'=' -f2)"
-  echo "Description : $(grep -E '^pkgdesc' PKGBUILD | cut -d "=" -f2 | sed 's/"//g')"
-  echo "Version : $(grep -E '^pkgver=' PKGBUILD | cut -d'=' -f2)"
+  echo "Package : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].PackageBase')"
+  echo "Description : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].Description')"
+  echo "Version : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].Version')"
   echo "Arch : $(grep -E '^arch=' PKGBUILD | cut -d'=' -f2)"
-  echo "Source URL : $(grep -oP '^url=\K[^ _]+')"
-  echo "Dependency : $(awk -v RS=")" '/depends=\(/ && !/optdepends/ && !/makedepends/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)"
-  echo "Optional Dependency : $(awk -v RS=")" '/optdepends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)"
-  echo "Make Dependency Used : $(awk -v RS=")" '/makedepends=\(/ {gsub(/^.*\(/,""); gsub(/'\''/,""); print}' PKGBUILD)"
+  echo "Source URL : $( curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].URL')"
+  echo "Dependency : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].Depends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')"
+  echo "Optional Dependency : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].OptDepends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')"
+  echo "Make Dependency Used : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].MakeDepends[]' | sed 's/"//g' | sed 's/>=[^"]*//g' | tr '\n' ' ')"
   } >> /build/build.md
 }
 

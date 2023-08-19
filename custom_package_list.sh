@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+PKGQ='null'
+
 #Package Redirects Should Be Added Here
 #i.e Packages with Diffrent names in AUR Repo or Offical Pacman Repo
 
