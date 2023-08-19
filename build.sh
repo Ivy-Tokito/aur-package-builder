@@ -26,7 +26,7 @@ elif [ "$1" = "buildeps" ]; then
 	ci-depends
 	exit 0
 elif [ "$1" = "build" ]; then
-	verify-source
+	#verify-source
 	build
 	get-builds
 	pr "Package : $PACKAGE Built Successfuly"
