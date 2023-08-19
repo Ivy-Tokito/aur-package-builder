@@ -136,7 +136,7 @@ get-env-vars() {
 build (){
   get-base-pkg "$PACKAGE"
   # Build Package
-  cd "/home/user/$AUR_PKG" || pr "$AUR_PKG Repo doesn't exist" && exit 1
+  cd "/home/user/$AUR_PKG" || exit 1
   export USE_CCACHE=1
   export CCACHE_EXEC=/usr/bin/ccache
   ccache -M "$CCACHE_SIZE"
