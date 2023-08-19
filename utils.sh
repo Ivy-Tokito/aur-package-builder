@@ -132,7 +132,6 @@ ci-depends() {
 }
 
 get-env-vars() {
-  local PACKAGE
   # Get Env Vars
   mkdir -p /build/; {
   echo "Package : $(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].PackageBase')"
