@@ -24,7 +24,7 @@ elif [ "$1" = "buildeps" ]; then
 	cd "/home/$NR_USER" || exit 1
 	clone-repo "$PACKAGE"
   get-env-vars
-	ci-depends
+	ci-depends "$PACKAGE"
 	exit 0
 elif [ "$1" = "build" ]; then
 	verify-source

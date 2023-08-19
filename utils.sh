@@ -116,17 +116,12 @@ check-queue(){
 }
 
 ci-depends() {
+  local PACKAGE="$1"
   get-depends "$PACKAGE"
   for DEPENDS in $PACKDEPS; do
     check-broken-packages "$DEPENDS"
     check-package-availability "$PACKDEPNDS"
-
-    get-depends "$PACKDEPNDS" "SUB"
-    for SUBDEPENDS in $SUB_PACKDEPS; do
-      check-broken-packages "$SUBDEPENDS" "SUB"
-      check-package-availability "$SUB_PACKDEPNDS"
-      build-depends
-    done
+    ci-depends "$PACKDEPNDS"
     build-depends
   done
 }
