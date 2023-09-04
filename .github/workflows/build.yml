@@ -22,9 +22,6 @@ jobs:
       - name: Check Given Package Name
         run: bash build.sh checkpkg
 
-      - name: Check & Build Unavailable Dependencies
-        run: bash build.sh buildeps
-
       - name: Build Package
         run: bash build.sh build
 
