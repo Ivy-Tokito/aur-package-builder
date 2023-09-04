@@ -9,7 +9,7 @@ Extensive AUR Package builder
 ## Usage:
 * Star the repo :eyes:
  * [Fork the repo](https://github.com/Tokito-Kun/aur-package-builder/fork) or use it as a template.
- * Add your Package Name in Variable **PACKAGE** [build.sh](./build.sh).
+ * Add your Package Name in Variable **PACKAGE** [build.sh](./config.conf).
  * On commit Push the [workflow](../../actions/workflows/build.yml) will Run.
  * Grab your Packages [releases](../../releases).
 

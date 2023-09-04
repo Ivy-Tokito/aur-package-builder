@@ -6,18 +6,21 @@ on:
 
 jobs:
   build:
-    permissions: write-all  
+    permissions: write-all
     runs-on: ubuntu-latest
     container:
       image: archlinux
       options: --privileged
-      
-    steps:    
+
+    steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup Build Environment
         run: bash build.sh setupenv
+
+      - name: Check Given Package Name
+        run: bash build.sh checkpkg
 
       - name: Build Package
         run: bash build.sh build
@@ -35,7 +38,7 @@ jobs:
           echo "BUILD_LOG<<${DELIM}" >> "$GITHUB_OUTPUT"
           cat /build/build.md >> "$GITHUB_OUTPUT"
           echo "${DELIM}" >> "$GITHUB_OUTPUT"
-          
+
       - name: Get Tag
         id: build_tag
         run: |
@@ -54,7 +57,12 @@ jobs:
           file_glob: true
           overwrite: true
 
+      - name: Get logs
+        if: success() || failure()
+        run: bash build.sh logs
+
       - name: Upload Build Logs
+        if: success() || failure()
         uses: actions/upload-artifact@v3
         with:
           name: logs
