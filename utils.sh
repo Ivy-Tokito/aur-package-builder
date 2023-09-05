@@ -37,8 +37,8 @@ add-nroot-user() {
 }
 
 install-yay() {
-  cd /home/user/ || exit 1
   sudo -u user bash <<EXC
+  mkdir -p /home/user/build && cd /home/user/build || exit 1
   git clone "https://aur.archlinux.org/yay.git"
   cd yay || exit 1
   makepkg -Csi --noconfirm --needed
@@ -53,6 +53,16 @@ check-pkg() {
   else
     pr "$PACKAGE Package is Available Continue to Build"
     install-yay
+    preqp
+  fi
+}
+
+preqp() {
+  # Prerequisite Package 
+  if [ ! -z "$PACK" ];then
+    sudo -u user bash <<EXP
+    yay -S --rebuildtree --noconfirm --noprogressbar --builddir="/home/user/build" "$PACK"
+EXP
   fi
 }
 
@@ -65,7 +75,7 @@ build (){
   ccache -M "$CCACHE_SIZE"
   sudo -u user bash <<EXU
   mkdir -p /home/user/build
-  yay -S --rebuildall --noconfirm --noprogressbar --builddir="/home/user/build" "$PACKAGE"
+  yay -S --rebuildtree --noconfirm --noprogressbar --builddir="/home/user/build" "$PACKAGE"
 EXU
 }
 
