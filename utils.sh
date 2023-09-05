@@ -59,9 +59,9 @@ check-pkg() {
 
 preqp() {
   # Prerequisite Package 
-  if [ ! -z "$PACK" ];then
+  if [ ! -z "$PREQ" ];then
     sudo -u user bash <<EXP
-    yay -S --rebuildtree --noconfirm --noprogressbar --builddir="/home/user/build" "$PACK"
+    yay -S --rebuildtree --noconfirm --noprogressbar --builddir="/home/user/build" "$PREQ"
 EXP
   fi
 }
