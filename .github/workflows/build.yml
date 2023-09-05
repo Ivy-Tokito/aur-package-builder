@@ -24,23 +24,20 @@ jobs:
 
       - name: Build Package
         run: bash build.sh build
-
-      - name: Get Release Name
-        id: release_name
+        
+      - id: release_name
         run: |
           RELEASE="$(grep "Package :" /build/build.md | awk -F' : ' '{print $2}')"
           echo "RELEASE_NAME=$RELEASE" >> "$GITHUB_OUTPUT"
 
-      - name: Get Release Description
-        id: description
+      - id: description
         run: |
           DELIM="$(openssl rand -hex 8)"
           echo "BUILD_LOG<<${DELIM}" >> "$GITHUB_OUTPUT"
           cat /build/build.md >> "$GITHUB_OUTPUT"
           echo "${DELIM}" >> "$GITHUB_OUTPUT"
 
-      - name: Get Tag
-        id: build_tag
+      - id: build_tag
         run: |
           TAG="v$(grep "Version :" /build/build.md | awk -F' : ' '{print $2}')"
           echo "BUILD_TAG=$TAG" >> $GITHUB_OUTPUT
@@ -56,15 +53,3 @@ jobs:
           tag: ${{ steps.build_tag.outputs.BUILD_TAG }}
           file_glob: true
           overwrite: true
-
-      - name: Get logs
-        if: success() || failure()
-        run: bash build.sh logs
-
-      - name: Upload Build Logs
-        if: success() || failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: logs
-          path: /build/logs
-          if-no-files-found: ignore
