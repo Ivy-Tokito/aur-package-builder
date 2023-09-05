@@ -15,7 +15,6 @@ Extensive AUR Package builder
 
 ## Note:
  * commit the package name exactly as in [AUR Package Repository](https://aur.archlinux.org/).
- * Build logs are Uploaded as [Artifacts](../../actions/workflows/build.yml).
 
  ##
 ```console

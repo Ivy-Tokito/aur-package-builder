@@ -16,17 +16,12 @@ elif [ "$1" = "clean" ]; then
 elif [ "$1" = "setupenv" ]; then
 	setupenv
 	add-nroot-user
-	exit 0
-elif [ "$1" = "checkpkg" ]; then
-	check-pkg
+    check-pkg
 	exit 0
 elif [ "$1" = "build" ]; then
 	build
 	get-env-vars
 	get-packages && pr "Package : $PACKAGE Built Successfuly"
-	exit 0
-elif [ "$1" = "logs" ]; then
-	get-logs
   exit 0
 else
 	print_usage

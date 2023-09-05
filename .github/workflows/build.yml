@@ -19,9 +19,6 @@ jobs:
       - name: Setup Build Environment
         run: bash build.sh setupenv
 
-      - name: Check Given Package Name
-        run: bash build.sh checkpkg
-
       - name: Build Package
         run: bash build.sh build
 
@@ -56,15 +53,3 @@ jobs:
           tag: ${{ steps.build_tag.outputs.BUILD_TAG }}
           file_glob: true
           overwrite: true
-
-      - name: Get logs
-        if: success() || failure()
-        run: bash build.sh logs
-
-      - name: Upload Build Logs
-        if: success() || failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: logs
-          path: /build/logs
-          if-no-files-found: ignore

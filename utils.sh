@@ -91,10 +91,3 @@ get-packages() {
   mkdir -p /build/packages
   find "/home/user/build" -type f -name "*.pkg*" -exec cp -v {} "/build/packages" \;
 }
-
-get-logs() {
-  # Copy logs
-  mkdir -p /build/logs
-  find "/home/user/$AUR_PKG" -type f -name "*.log" -exec cp -v {} "/build/logs" \; 2>/dev/null
-  pr "check /build/logs for build logs"
-}
