@@ -24,6 +24,7 @@ setupenv() {
   sed -i 's/\(COMPRESSXZ=(.*\))$/\1-threads=0 -)/' /etc/makepkg.conf
 
   # Install & Upgrade Packages
+  pacman-key --init
   pacman -Syuu --noconfirm --needed base-devel psmisc mold ccache jq git sudo
 }
 
@@ -63,7 +64,7 @@ preqp() {
     sudo -u user bash <<EXP
     PREQ="$PREQ"
     for PREP in \$PREQ;do
-      yay -S --rebuildtree --noconfirm --noprogressbar --builddir="/home/user/build" "\$PREP"
+      yay -S --rebuildtree --noconfirm --needed --noprogressbar --builddir="/home/user/build" "\$PREP"
     done
 EXP
   fi
@@ -78,7 +79,7 @@ build (){
   ccache -M "$CCACHE_SIZE"
   sudo -u user bash <<EXU
   mkdir -p /home/user/build
-  yay -S --rebuildtree --noconfirm --noprogressbar --builddir="/home/user/build" "$PACKAGE"
+  yay -S --rebuildtree --noconfirm --needed --noprogressbar --builddir="/home/user/build" "$PACKAGE"
 EXU
 }
 
