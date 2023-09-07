@@ -16,7 +16,7 @@ Extensive AUR Package builder
 ## Note:
  * commit the package name exactly as in [AUR Package Repository](https://aur.archlinux.org/).
  * if build fails due to Prerequisite Packages add them in Variable **PREQ** [config.conf](./config.conf).
-
+ * Add any custom commands to run before build starts in Variable **CMD** [config.conf](./config.conf).
  ##
 ```console
 $ # commit your package name Here

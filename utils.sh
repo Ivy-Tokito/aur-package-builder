@@ -46,7 +46,7 @@ install-yay() {
 EXC
 }
 
-check-pkg() {
+prepkg() {
   local AUR_PKG=$(curl -s "https://aur.archlinux.org/rpc/?v=5&type=info&arg[]=$PACKAGE" | jq -r '.results[0].PackageBase');
   if [ "$AUR_PKG" = null ];then
     pr "$PACKAGE Package not found in AUR Repo || Abort"
@@ -54,10 +54,16 @@ check-pkg() {
   else
     pr "$PACKAGE Package is Available Continue to Build"
     install-yay
+    cmds
     preqp
   fi
 }
 
+cmds() {
+  if [[ ! -z "$CMD" ]];then
+    eval "$CMD"
+  fi
+}
 preqp() {
   # Prerequisite Package 
   if [[ ! -z "$PREQ" ]];then

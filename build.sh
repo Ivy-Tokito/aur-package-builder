@@ -16,7 +16,7 @@ elif [ "$1" = "clean" ]; then
 elif [ "$1" = "setupenv" ]; then
 	setupenv
 	add-nroot-user
-    check-pkg
+	prepkg
 	exit 0
 elif [ "$1" = "build" ]; then
 	build
