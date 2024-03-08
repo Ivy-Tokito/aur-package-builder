@@ -25,7 +25,7 @@ jobs:
       - name: Get Release Name
         id: release_name
         run: |
-          RELEASE="$(grep "Package :" /build/build.md | awk -F' : ' '{print $2}')"
+          RELEASE="$(grep "Package :" /build/build.md | awk -F' : ' '{print $2}' | sed 's/:/-/')"
           echo "RELEASE_NAME=$RELEASE" >> "$GITHUB_OUTPUT"
 
       - name: Get Release Description
